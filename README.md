@@ -1,41 +1,13 @@
-# wikidata-topic-model
-Map Wikidata items to a taxonomy of topics from WikiProjects. This approach represents a Wikipedia article based on the claims contained in its Wikidata item. The topics are determined based on the WikiProject directory. Currently this repository just contains a Flask app that provides predictions based on a pre-trained model but eventually it will be expanded to include the entire training process.
+# Generating topic for Wikidata Items that have Wikipedia article (sitelinks)
 
-## Running the app
+This is an off-line implementation of the [Wikidata Topic Model API](https://github.com/geohci/wikidata-topic-model-api). The aim is to compute the topics for all the Wikidata Items that has an article in any Wikipedia. 
 
-```
-cd app
-python3 app.py
-```
-NOTE: you must have the fastText Python module installed.
-See https://fasttext.cc/docs/en/support.html for how to install.
+These notebooks makes usage of the [WMF's Hadoop Cluster](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Cluster). If you don't have access to that cluster, you will need to rewrite the code using the [Wikidata Dump](https://dumps.wikimedia.org/wikidata). 
 
-### Querying Wikidata items
-After starting the app as described above, queries can be made via the browser. For example, for [Toni Morrison](https://www.wikidata.org/wiki/Q72334):
+Here we use two tables from the [Wikimedia Data Lake](https://wikitech.wikimedia.org/wiki/Analytics/Data_Lake):
 
-http://127.0.0.1:5000/api/v1/wikidata/topic?qid=Q72334
+* [wmf.wikidata_item_page_link](https://wikitech.wikimedia.org/wiki/Analytics/Data_Lake/Edits/Wikidata_item_page_link): Containig the relation between Wikidata Items and Page Titles. This is results are equivalent to the 'sitelinks' value that you will find in the Wikidata Dump.
 
-The threshold above which a topic is returned [0-1] can be set via the `threshold` parameter but otherwise defaults to `0.5`:
+* [wmf.wikidata_entity](https://wikitech.wikimedia.org/wiki/Analytics/Data_Lake/Edits/Wikidata_entity): From we exract the claims for each Wikidata Items. You will find equilivant information in the claims field of Wikidata dump. 
 
-http://127.0.0.1:5000/api/v1/wikidata/topic?qid=Q72334&threshold=0.1
-
-Append the `debug` parameter for additional output including all of the topics and scores and the Wikidata claims processed by the model:
-
-http://127.0.0.1:5000/api/v1/wikidata/topic?qid=Q72334&debug
-
-### Adding LIME explanations
-To get a sense of why the model is making the predictions it is, you can enable explanations for each prediction. The explanations are made via LIME (https://github.com/marcotcr/lime) and indicate the best guess around which Wikidata properties / values were most influential in making the prediction for that label. It can slow down the processing, so they are off by default. To turn them on, simply set the `PROVIDE_EXPLANATIONS` variable in `app.py` to `True` and restart the app (`Ctrl+C` and then rerun `python3 app.py`).
-
-## Running the bulk Wikidata script
-This script takes in a file with JSON objects containing the wikidata IDs to query (and any additional metadata) and outputs these JSONs with the predicted labels. Example input / output data is provided in the `bulk/data` folder.
-
-```
-cd bulk
-python3 wikidata_ids_to_topics.py --help
-python3 wikidata_ids_to_topics.py
-```
-NOTE: like the app, you must have the fastText Python module installed.
-See https://fasttext.cc/docs/en/support.html for how to install.
-
-## See Also
-https://meta.wikimedia.org/wiki/Research_talk:Characterizing_Wikipedia_Reader_Behaviour/Demographics_and_Wikipedia_use_cases/Work_log/2019-09-11
+This code works is based on the  [wikidata-topic-model-api](https://github.com/geohci/wikidata-topic-model-api). If want to get the topic for sinlge (or small set of) Wikidata Item(s), we recommend you to use this experimental API: https://tools.wmflabs.org/wiki-topic/
